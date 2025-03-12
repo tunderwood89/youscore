@@ -2,41 +2,50 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
-chrome.storage.local.get("firebaseConfig", async (data) => {
-    if (data.firebaseConfig) {
-        const app = initializeApp(data.firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth();
-        const provider = new GoogleAuthProvider();
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "your-app.firebaseapp.com",
+    projectId: "your-app",
+    storageBucket: "your-app.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef"
+};
 
-        chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-            if (message.action === "signIn") {
-                signInWithPopup(auth, provider)
-                    .then((result) => sendResponse({ success: true, user: result.user.displayName }))
-                    .catch((error) => sendResponse({ success: false, error: error.message }));
-                return true;
-            }
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth();
+const provider = new GoogleAuthProvider();
 
-            if (message.action === "submitRating") {
-                const user = auth.currentUser;
-                if (!user) {
-                    sendResponse({ success: false, error: "Not signed in" });
-                    return;
-                }
+// Chrome Message Listener
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    if (message.action === "signIn") {
+        signInWithPopup(auth, provider)
+            .then((result) => sendResponse({ success: true, user: result.user.displayName }))
+            .catch((error) => sendResponse({ success: false, error: error.message }));
+        return true;
+    }
 
-                const channelRef = doc(db, "ratings", message.channel);
-                const channelSnap = await getDoc(channelRef);
+    if (message.action === "submitRating") {
+        const user = auth.currentUser;
+        if (!user) {
+            sendResponse({ success: false, error: "Not signed in" });
+            return;
+        }
 
-                let ratings = channelSnap.exists() ? channelSnap.data().ratings : {};
-                ratings[user.uid] = message.rating;
+        const channelRef = doc(db, "ratings", message.channel);
+        const channelSnap = await getDoc(channelRef);
 
-                const values = Object.values(ratings);
-                const avg = values.reduce((a, b) => a + b, 0) / values.length;
+        let ratings = channelSnap.exists() ? channelSnap.data().ratings : {};
+        ratings[user.uid] = message.rating;
 
-                await setDoc(channelRef, { ratings, average: avg });
+        // Calculate new average
+        const values = Object.values(ratings);
+        const avg = values.reduce((a, b) => a + b, 0) / values.length;
 
-                sendResponse({ success: true, average: avg });
-            }
-        });
+        await setDoc(channelRef, { ratings, average: avg });
+
+        sendResponse({ success: true, average: avg });
     }
 });
