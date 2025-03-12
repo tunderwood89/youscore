@@ -1,38 +1,74 @@
-async function fetchRating(channelName) {
-    const response = await fetch(`https://firestore.googleapis.com/v1/projects/YOUR_PROJECT_ID/databases/(default)/documents/ratings/${channelName}`);
+// Inject the rating circle next to YouTubers' names
+function injectRatingCircle(youtuberName) {
+    const ratingCircle = document.createElement("div");
+    ratingCircle.className = "youscore-rating-circle";
+    ratingCircle.dataset.youtuber = youtuberName;
+    ratingCircle.innerText = "0"; // Default score
+    ratingCircle.addEventListener("click", () => openRatingPopup(youtuberName));
+    const youtuberElement = document.querySelector(`a[title="${youtuberName}"]`);
+    if (youtuberElement) {
+      youtuberElement.parentNode.insertBefore(ratingCircle, youtuberElement.nextSibling);
+    }
+  }
+  
+  // Fetch and display the average rating from Firebase
+  async function fetchAverageRating(youtuberName) {
+    const response = await fetch(`https://your-firebase-db-url/youtubers/${youtuberName}.json`);
     const data = await response.json();
-    return data.fields?.average?.integerValue || "N/A";
-}
-
-function createRatingBadge(score) {
-    let badge = document.createElement("span");
-    badge.textContent = score ? `⭐ ${score}` : "⭐ N/A";
-    
-    badge.style.padding = "2px 6px";
-    badge.style.marginLeft = "8px";
-    badge.style.fontSize = "12px";
-    badge.style.fontWeight = "bold";
-    badge.style.borderRadius = "10px";
-    badge.style.color = "white";
-
-    badge.style.backgroundColor = score >= 80 ? "#4CAF50" :
-                                  score >= 50 ? "#FFC107" :
-                                                "#F44336";
-
-    return badge;
-}
-
-async function addRatingUI() {
-    const channelNames = document.querySelectorAll("#text.ytd-channel-name");
-
-    channelNames.forEach(async channel => {
-        if (!channel.dataset.ratingAdded) {
-            const avgScore = await fetchRating(channel.textContent);
-            const ratingBadge = createRatingBadge(avgScore);
-            channel.appendChild(ratingBadge);
-            channel.dataset.ratingAdded = "true";
-        }
+    return data?.averageRating || 0;
+  }
+  
+  // Open a popup to rate the YouTuber
+  function openRatingPopup(youtuberName) {
+    const rating = prompt(`Rate ${youtuberName} (1-100):`);
+    if (rating >= 1 && rating <= 100) {
+      submitRating(youtuberName, rating);
+    }
+  }
+  
+  // Submit the rating to Firebase
+  async function submitRating(youtuberName, rating) {
+    const response = await fetch(`https://your-firebase-db-url/youtubers/${youtuberName}/ratings.json`, {
+      method: "POST",
+      body: JSON.stringify({ userId: "anonymous123", rating: parseInt(rating) }),
     });
-}
-
-setInterval(addRatingUI, 2000);
+    if (response.ok) {
+      updateAverageRating(youtuberName);
+    }
+  }
+  
+  // Update the average rating displayed
+  async function updateAverageRating(youtuberName) {
+    const response = await fetch(`https://your-firebase-db-url/youtubers/${youtuberName}/ratings.json`);
+    const ratings = await response.json();
+    const total = Object.values(ratings).reduce((sum, r) => sum + r.rating, 0);
+    const averageRating = (total / Object.keys(ratings).length).toFixed(1);
+    await fetch(`https://your-firebase-db-url/youtubers/${youtuberName}.json`, {
+      method: "PATCH",
+      body: JSON.stringify({ averageRating }),
+    });
+    const ratingCircle = document.querySelector(`.youscore-rating-circle[data-youtuber="${youtuberName}"]`);
+    if (ratingCircle) {
+      ratingCircle.innerText = averageRating;
+    }
+  }
+  
+  // Main function to scan the page for YouTubers' names
+  function scanPage() {
+    const youtuberLinks = document.querySelectorAll("a[title]");
+    youtuberLinks.forEach((link) => {
+      const youtuberName = link.getAttribute("title");
+      if (!document.querySelector(`.youscore-rating-circle[data-youtuber="${youtuberName}"]`)) {
+        injectRatingCircle(youtuberName);
+        fetchAverageRating(youtuberName).then((averageRating) => {
+          const ratingCircle = document.querySelector(`.youscore-rating-circle[data-youtuber="${youtuberName}"]`);
+          if (ratingCircle) {
+            ratingCircle.innerText = averageRating;
+          }
+        });
+      }
+    });
+  }
+  
+  // Run the scanner every 2 seconds
+  setInterval(scanPage, 2000);
