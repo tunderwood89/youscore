@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouScore</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; width: 220px; }
+        h3 { margin: 10px 0; }
+        #rating-slider { width: 100%; margin: 10px 0; }
+        #submit { background-color: #4CAF50; color: white; padding: 8px; border: none; border-radius: 5px; cursor: pointer; }
+        #submit:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <h3>Rate This YouTuber</h3>
+    <input type="range" id="rating-slider" min="1" max="100" value="50">
+    <button id="submit">Submit Rating</button>
+    <button id="sign-in">Sign in with Google</button>
+    <script src="popup.js"></script>
+</body>
+</html>

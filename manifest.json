@@ -1,0 +1,24 @@
+{
+    "manifest_version": 3,
+    "name": "YouScore",
+    "version": "1.0",
+    "description": "Rate YouTubers from 1-100 and see the average rating.",
+    "permissions": ["storage"],
+    "host_permissions": ["https://www.youtube.com/*"],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": ["https://www.youtube.com/*"],
+        "js": ["content.js"]
+      }
+    ],
+    "action": {
+      "default_popup": "popup.html"
+    },
+    "content_security_policy": {
+      "extension_pages": "script-src 'self' https://www.gstatic.com https://firestore.googleapis.com; object-src 'self'"
+    }
+  }
+  
