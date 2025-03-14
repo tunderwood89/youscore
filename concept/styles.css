@@ -1,0 +1,39 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #000;
+    margin: 0;
+}
+
+.youscore-card {
+    display: flex;
+    align-items: center;
+    background-color: #000;
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    gap: 15px;
+}
+
+.score-container {
+    display: flex;
+    align-items: center;
+    background-color: white;
+    padding: 5px 10px;
+    border-radius: 50px;
+    gap: 10px;
+}
+
+.youscore-score {
+    color: black;
+    font-weight: bold;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
