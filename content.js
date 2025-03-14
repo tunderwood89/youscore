@@ -1,3 +1,10 @@
+// Inject CSS
+const link = document.createElement("link");
+link.rel = "stylesheet";
+link.type = "text/css";
+link.href = chrome.runtime.getURL("styles.css");
+document.head.appendChild(link);
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
@@ -66,52 +73,86 @@ async function insertRatingSystem() {
             const channelName = channel.textContent.trim();
             const { average, count } = await fetchRating(channelName);
             
-            const ratingContainer = document.createElement("div");
-            ratingContainer.className = "youscore-rating";
-            ratingContainer.innerText = `${average} (${count})`;
-            ratingContainer.style.marginLeft = "10px";
-            ratingContainer.style.padding = "4px 8px";
-            ratingContainer.style.background = "#f1f1f1";
-            ratingContainer.style.borderRadius = "12px";
-            ratingContainer.style.fontWeight = "bold";
-            ratingContainer.style.fontSize = "12px";
-            
-            const input = document.createElement("input");
-            input.type = "number";
-            input.min = "1";
-            input.max = "100";
-            input.placeholder = "Rate";
-            input.style.marginLeft = "5px";
-            input.style.width = "40px";
-            
-            const submitButton = document.createElement("button");
-            submitButton.innerText = "✓";
-            submitButton.style.marginLeft = "5px";
-            submitButton.style.cursor = "pointer";
-            submitButton.style.padding = "2px 6px";
-            submitButton.style.borderRadius = "5px";
-            submitButton.style.border = "none";
-            submitButton.style.background = "#007BFF";
-            submitButton.style.color = "white";
-            submitButton.style.fontSize = "12px";
-            
-            submitButton.onclick = async () => {
-                const userId = auth.currentUser.uid;
-                const userRating = parseInt(input.value);
-                if (userRating >= 1 && userRating <= 100) {
-                    await submitRating(channelName, userId, userRating);
-                    const updatedRating = await fetchRating(channelName);
-                    ratingContainer.innerText = `${updatedRating.average} (${updatedRating.count})`;
-                }
+            // Create the score display circle
+            const scoreCircle = document.createElement("div");
+            scoreCircle.className = "youscore-rating";
+            scoreCircle.innerText = `${average} (${count})`;
+            scoreCircle.style.display = "inline-block";
+            scoreCircle.style.marginLeft = "10px";
+            scoreCircle.style.padding = "4px 8px";
+            scoreCircle.style.background = "#f1f1f1";
+            scoreCircle.style.borderRadius =
+            scoreCircle.style.borderRadius = "50%";
+            scoreCircle.style.fontWeight = "bold";
+            scoreCircle.style.fontSize = "12px";
+            scoreCircle.style.cursor = "pointer";
+
+            // Add click event to show the rating pop-up
+            scoreCircle.onclick = () => {
+                showRatingPopup(channelName);
             };
-            
-            channel.appendChild(ratingContainer);
-            channel.appendChild(input);
-            channel.appendChild(submitButton);
+
+            // Append the score circle next to the channel name
+            channel.appendChild(scoreCircle);
         }
     });
 }
 
+function showRatingPopup(channelName) {
+    // Create the pop-up container
+    const popup = document.createElement("div");
+    popup.className = "youscore-popup";
+    popup.style.position = "fixed";
+    popup.style.top = "50%";
+    popup.style.left = "50%";
+    popup.style.transform = "translate(-50%, -50%)";
+    popup.style.background = "white";
+    popup.style.border = "1px solid #ccc";
+    popup.style.padding = "20px";
+    popup.style.zIndex = "1000";
+    popup.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)";
+
+    // Create input for rating
+    const input = document.createElement("input");
+    input.type = "number";
+    input.min = "1";
+    input.max = "100";
+    input.placeholder = "Rate (1-100)";
+    input.style.width = "100px";
+
+    // Create submit button
+    const submitButton = document.createElement("button");
+    submitButton.innerText = "Submit";
+    submitButton.style.marginLeft = "10px";
+    submitButton.onclick = async () => {
+        const userId = auth.currentUser.uid;
+        const userRating = parseInt(input.value);
+        if (userRating >= 1 && userRating <= 100) {
+            await submitRating(channelName, userId, userRating);
+            const updatedRating = await fetchRating(channelName);
+            alert(`Thank you for rating! New average: ${updatedRating.average} (${updatedRating.count})`);
+            document.body.removeChild(popup); // Close the popup
+        } else {
+            alert("Please enter a rating between 1 and 100.");
+        }
+    };
+
+    // Create close button
+    const closeButton = document.createElement("button");
+    closeButton.innerText = "Close";
+    closeButton.style.marginLeft = "10px";
+    closeButton.onclick = () => {
+        document.body.removeChild(popup); // Close the popup
+    };
+
+    // Append elements to the popup
+    popup.appendChild(input);
+    popup.appendChild(submitButton);
+    popup.appendChild(closeButton);
+    document.body.appendChild(popup);
+}
+
+// Observe changes in the DOM to insert the rating system
 const observer = new MutationObserver(insertRatingSystem);
 observer.observe(document.body, { childList: true, subtree: true });
 insertRatingSystem();

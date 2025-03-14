@@ -1,0 +1,32 @@
+.youscore-rating {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 4px 8px;
+    background: #f1f1f1;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.youscore-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    z-index: 1000;
+}
+
+.youscore-popup input {
+    width: 100px;
+    margin-right: 10px;
+}
+
+.youscore-popup button {
+    margin-left: 10px;
+}
