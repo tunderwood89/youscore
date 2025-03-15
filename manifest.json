@@ -5,6 +5,9 @@
   "description": "Rate YouTubers from 1-100 and see the average rating.",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["*://*.youtube.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": ["*://*.youtube.com/watch*"],

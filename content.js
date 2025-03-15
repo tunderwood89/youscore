@@ -1,45 +1,44 @@
-// Function to create the score circle
-function createScoreCircle(score) {
+// Function to create the rating circle
+function createRatingCircle(score) {
     const circle = document.createElement('div');
-    circle.className = 'youscore-circle';
+    circle.className = 'youscore-rating-circle';
     circle.textContent = score; // Display the score
     return circle;
 }
 
-// Function to insert the score circle next to the avatar
-function insertScoreCircle() {
-    const avatarContainer = document.querySelector('ytd-video-owner-renderer #owner');
-    if (avatarContainer) {
-        // Fetch or calculate the score (placeholder for now)
-        const score = 85; // Replace with your logic to fetch the score
+// Function to extract the channel ID
+function getChannelId() {
+    const channelLink = document.querySelector('ytd-video-owner-renderer a[href*="/channel/"]');
+    if (channelLink) {
+        const href = channelLink.getAttribute('href');
+        const channelId = href.split('/channel/')[1];
+        return channelId;
+    }
+    return null;
+}
 
-        // Create and insert the score circle
-        const scoreCircle = createScoreCircle(score);
-        avatarContainer.appendChild(scoreCircle);
+// Function to fetch the YouTuber's score (placeholder for now)
+async function fetchYouTuberScore(channelId) {
+    // Replace this with your API call to fetch the score
+    return 85; // Placeholder score
+}
+
+// Function to insert the rating circle next to the avatar
+async function insertRatingCircle() {
+    const channelContainer = document.querySelector('ytd-video-owner-renderer #channel-name');
+    if (channelContainer) {
+        const channelId = getChannelId();
+        if (channelId) {
+            const score = await fetchYouTuberScore(channelId);
+            const ratingCircle = createRatingCircle(score);
+            channelContainer.parentElement.insertBefore(ratingCircle, channelContainer.nextSibling);
+        }
     }
 }
 
 // Wait for the page to load
-document.addEventListener('DOMContentLoaded', insertScoreCircle);
+document.addEventListener('DOMContentLoaded', insertRatingCircle);
 
 // Handle dynamic page changes (e.g., navigating between videos)
-const observer = new MutationObserver(insertScoreCircle);
+const observer = new MutationObserver(insertRatingCircle);
 observer.observe(document.body, { childList: true, subtree: true });
-
-async function fetchYouTuberScore(channelId) {
-    const response = await fetch(`https://api.youscore.com/scores/${channelId}`);
-    const data = await response.json();
-    return data.score;
-}
-
-// Modify the insertScoreCircle function to fetch the score
-async function insertScoreCircle() {
-    const avatarContainer = document.querySelector('ytd-video-owner-renderer #owner');
-    if (avatarContainer) {
-        const channelId = getChannelId(); // Implement this function to extract the channel ID
-        const score = await fetchYouTuberScore(channelId);
-
-        const scoreCircle = createScoreCircle(score);
-        avatarContainer.appendChild(scoreCircle);
-    }
-}

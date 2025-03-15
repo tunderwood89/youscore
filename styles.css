@@ -1,5 +1,5 @@
-/* Style for the score circle */
-.youscore-circle {
+/* Style for the rating circle */
+.youscore-rating-circle {
     display: flex;
     align-items: center;
     justify-content: center;
