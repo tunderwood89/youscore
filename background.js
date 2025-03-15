@@ -2,3 +2,4 @@
 chrome.runtime.onInstalled.addListener(() => {
     console.log('YouScore extension installed.');
 });
+importScripts("hot-reload.js");
